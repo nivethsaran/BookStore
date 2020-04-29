@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block title %}BookCorner{% endblock %}
+
+{% block content %}
+
+{% if session['username'] %}
+
+
+{% else %}
+<h2>Please login to use these features</h2>
+{% endif %}
+
+{% endblock %}

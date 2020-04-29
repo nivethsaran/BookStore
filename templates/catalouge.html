@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+
+{% block title %}BookCorner{% endblock %}
+
+{% block content %}
+
+{% if session['username'] %}
+
+<br>
+{% with message = get_flashed_messages() %}
+{% if message %}
+<div class="alert  alertmessagecustom alert-info col-lg alert-dismissible fade show" role="alert">
+    {% for messages in message%}
+    {{messages}}
+    {% endfor %}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endif %}
+{% endwith %}
+<br>
+{% if booklist %}
+<div class="container">
+    <div class="row">
+{% for book in booklist %}
+<div class="col-md-12">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4>{{book[0]}}</h4>
+            <p class="card-text">{{'Genre:'+book[6]}}</p>
+            <p>
+            {% for i in range(0,book[2])%}
+            ⭐
+            {% endfor %}
+            </p>
+            <small class="text-muted">Stock Available</small>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                    <button onclick="window.location.href ='/book/{{book[1]}}' ;" type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                    <button onclick="window.location.href ='/addtocart/{{book[1]}}' ;" type="button" class="btn btn-sm btn-outline-secondary">Add to Cart</button>
+                    <button onclick="window.location.href ='/addtofav/{{book[1]}}' ;" type="button" class="btn btn-sm btn-outline-secondary">Add to Favourites</button>
+                </div>
+                <img class="bd-placeholder-img card-img-right" width="10%" src="{{book[4]}}">
+            
+<h5 style="color:green">${{book[3]}}</h5>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+    </div>
+</div>
+{% endif %}
+{% else %}
+<h2>Please login to use these features</h2>
+{% endif %}
+
+{% endblock %}

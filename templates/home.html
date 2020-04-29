@@ -1,0 +1,93 @@
+{% extends 'layout.html' %}
+
+{% block title %}BookCorner{% endblock %}
+
+{% block content %}
+
+{% if session['username'] %}
+<br>
+<div class = "row">
+    <div class ="col-md-1">
+
+    </div>
+    <div class="col-md-8 personaldetails">
+    <h2>{{'Welcome, '+session['fullname'] + '!' }}</h2>
+    </div>
+
+    <div class="col-md-3">
+    <h5>{{ 'Mobile:'+session['mobile']}}</h4>
+    <h5>{{ 'Email:'+session['email']}}</h4>
+    </div>
+</div>
+<br>
+<br>
+
+{% if listbm %}
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <img class="bd-placeholder-img card-img-top" width="100%" height="225"
+                    src="{{listbm[0][4]}}" preserveAspectRatio="xMidYMid slice" focusable="false" role="img"
+                    aria-label="Placeholder: Thumbnail">
+                    <title>Placeholder</title>
+                <div class="card-body">
+                    <h6 class="card-text">{{listbm[0][0]}}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <!-- <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button> -->
+                        </div>
+                        <p style="color: green;">${{listbm[0][3]}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <img class="bd-placeholder-img card-img-top" width="100%" height="225" src="{{listbm[1][4]}}"
+                    preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail">
+                <title>Placeholder</title>
+                <div class="card-body">
+                    <h6 class="card-text">{{listbm[1][0]}}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <!-- <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button> -->
+                        </div>
+                        <p style="color: green;">${{listbm[1][3]}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <img class="bd-placeholder-img card-img-top" width="100%" height="225" src="{{listbm[2][4]}}"
+                    preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail">
+                <title>Placeholder</title>
+                <div class="card-body">
+                    <h6 class="card-text">{{listbm[2][0]}}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <!-- <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button> -->
+                        </div>
+                        <p style="color: green;">${{listbm[2][3]}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="btn-dark col-md-3 center" onclick="window.location.href ='/catalouge' ;">Check out more</button>
+
+{% endif %}
+
+{% else %}
+<h2>User has been currently logged out. Log in to access app features</h2>
+{% endif %}
+
+
+{% endblock %}

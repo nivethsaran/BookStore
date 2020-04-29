@@ -1,0 +1,88 @@
+{% extends 'layout.html' %}
+
+{% block title %}BookCorner{% endblock %}
+
+{% block content %}
+
+{% if session['username'] %}
+
+<br>
+{% with message = get_flashed_messages() %}
+{% if message %}
+<div class="alert  alertmessagecustom alert-info col-lg alert-dismissible fade show" role="alert">
+    {% for messages in message%}
+    {{messages}}
+    {% endfor %}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endif %}
+{% endwith %}
+<br>
+{% if cartlist %}
+<div class="container">
+    <div class="row">
+        {% for book in cartlist %}
+        <div class="col-md-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h4>{{book[0]}}</h4>
+                    <p class="card-text">{{'Genre:'+book[6]}}</p>
+                    <p>
+                        {% for i in range(0,book[2])%}
+                        ⭐
+                        {% endfor %}
+                    </p>
+                    <small class="text-muted">Stock Available</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <button onclick="window.location.href ='/book/{{book[1]}}' ;" type="button"
+                                class="btn btn-sm btn-outline-secondary">View</button>
+                            <button onclick="window.location.href ='/removefromcart/{{book[1]}}' ;" type="button" class="btn btn-sm btn-outline-secondary">Remove from Cart</button>
+                            <form method="POST" action='/updatecart/{{book[1]}}'>
+                                    <input type="number" class="form-control quantity" name="quantity" id="quantity"  value="{{book[7]}}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Update Quantity</button>
+                            </form>
+                        </div>
+                        <img class="bd-placeholder-img card-img-right" width="10%" src="{{book[4]}}">
+                        <h5 style="color:green">${{book[3]}}</h5>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row" style="margin-right: 12.5%;">
+<div class="col-md-8">
+    <div class="card mb-4 shadow-sm">
+        
+    </div>
+    </div>
+    <div class="col-md-4" style="align-items: center;">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h4 class="total">Total: <span style="color: green;">${{price}}<span></h4>    
+                    <button onclick="window.location.href ='/checkout' ;" type="button"
+                        class="btn btn-lg btn-outline-secondary">Checkout</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<br>
+<br>
+
+
+{% else %}
+<h2>Please login to use these features</h2>
+{% endif %}
+
+{% endblock %}
