@@ -1,17 +1,56 @@
 {% extends 'layout.html' %}
 
-{% block title %}BookCorner{% endblock %}
+{% block title %}Book Corner{% endblock %}
 
 {% block content %}
 
-<div class="about">
-<h1> N & N invite you to experience the forecast magic using 4cast
-</h1>
-<!-- <p>India has some of the most spectacular and unforgettable rail journeys in the world. Here you experience a simple way to
-find out everything you need to know in one easy place. There's no better way to enjoy India's outback, cities, coastal
-towns and regional areas in comfort.</p>
-<p>Railway Enquiry System is a one stop solution that furnishes an expanse of data-based travel discovery at your disposal. So get
-connected for an inclusive Rail journey information experience!</p> -->
-<img  class="aboutimage center" src="/static/weather3.jpg">
+{% if session['username'] %}
+
+
+{% with message = get_flashed_messages() %}
+{% if message %}
+<div class="alert  alertmessagecustom alert-info col-lg alert-dismissible fade show" role="alert">
+    {% for messages in message%}
+    {{messages}}
+    {% endfor %}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
+{% endif %}
+{% endwith %}
+
+<h1>Orders</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">OrderID</th>
+            <th scope="col">Address</th>
+            <th scope="col">Date and Time</th>
+            <th scope="col">Amount Paid</th>
+            <th scope="col">Payment Method</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if orderlist %}
+        {% for order in orderlist%}
+        <tr>
+            <th scope="row">{{order[0]}}</th>
+            <td>{{order[1]}}</td>
+            <td>{{order[2]}}</td>
+            <td>{{order[3]}}</td>
+            <td>{{order[4]}}</td>
+            <td><a href="/cancel/{{order[0]}}">Cancel</a></td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+</table>
+
+{% else %}
+<h2>Please login to use these features</h2>
+{% endif %}
+
 {% endblock %}

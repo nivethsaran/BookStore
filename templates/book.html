@@ -7,6 +7,74 @@
 {% if session['username'] %}
 
 
+{% if bookdata %}
+<br>
+{% with message = get_flashed_messages() %}
+{% if message %}
+<div class="alert  alertmessagecustom alert-info col-lg alert-dismissible fade show" role="alert">
+    {% for messages in message%}
+    {{messages}}
+    {% endfor %}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endif %}
+{% endwith %}
+<br>
+
+<div class="container">
+    <div class="row">
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <h4>{{bookdata[0]}}</h4>
+                            <p class="card-text">{{'Genre:'+bookdata[6]}}</p>
+                            <p>
+                                {% for i in range(0,bookdata[2])%}
+                                ⭐
+                                {% endfor %}
+                            </p>
+                            {% if desc%}
+                            <p>
+                                {{desc}}
+                            </p>
+                            {% else %}
+                            <p>
+                                No description available.
+                            </p>
+                            {% endif %}
+                            <small class="text-muted">Stock Available</small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button onclick="window.history.back()" type="button"
+                                        class="btn btn-sm btn-outline-secondary">Back</button>
+                                    <button onclick="window.location.href ='/addtocartfromview/{{bookdata[1]}}' ;" type="button"
+                                        class="btn btn-sm btn-outline-secondary">Add to Cart</button>
+                                    <button onclick="window.location.href ='/addtofavfromview/{{bookdata[1]}}' ;" type="button"
+                                        class="btn btn-sm btn-outline-secondary">Add to favourites</button>
+                                </div>
+                                <img class="bd-placeholder-img card-img-right" width="10%" src="{{bookdata[4]}}">
+                                <h5 style="color:green">${{bookdata[3]}}</h5>
+        
+        
+        
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+    </div>
+        </div>
+        </div>
+
+        <br>
+        <br>
+        <br>
+{% endif %}
 {% else %}
 <h2>Please login to use these features</h2>
 {% endif %}

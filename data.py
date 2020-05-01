@@ -41,11 +41,12 @@ for link in links:
             rating=4
         elif(ratingText=="Five"):
             rating=5
-        image = url + bookSoup.find('img')['src'][9:]
-        details=url+'catalogue/'+ bookSoup.find('div',class_='image_container').find('a')['href'][6:]
-        # dbURL = "INSERT INTO books values(?,?,?,?,?,?,?,?)"
-        # cursor = conn.cursor()
-        # cursor.execute(dbURL, (book,cursor.lastrowid,int(rating) ,float(price), int(stock), image, details, genre))
-        # conn.commit()
+        image = url + bookSoup.find('img')['src'][12:]
+        details=url+'catalogue/'+ bookSoup.find('div',class_='image_container').find('a')['href'][9:]
+        # print(image)
+        dbURL = "INSERT INTO books values(?,?,?,?,?,?,?)"
+        cursor = conn.cursor()
+        cursor.execute(dbURL, (book,cursor.lastrowid,int(rating) ,float(price), image, details, genre))
+        conn.commit()
     
 print(genrelist)

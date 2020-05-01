@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone, date
 import datetime
 import time
 import urllib3
+import requests
+from bs4 import BeautifulSoup
 import random
 import os
 from datautil import *
@@ -76,6 +78,10 @@ def isValidNumber(number):
     Pattern = re.compile("(0/91)?[5-9][0-9]{9}")
     return Pattern.match(number)
 
+def isValidZip(number):
+    Pattern = re.compile("[0-9]{6}")
+    return Pattern.match(number)
+
 #Function to check if password is valid
 def validPassword(password):
    flag = 0
@@ -104,6 +110,9 @@ def validPassword(password):
 
    if flag == -1:
        return 'invalid'
+
+
+
 
 #Signup Route
 @app.route('/signup',methods=['GET','POST'])
@@ -149,18 +158,27 @@ def signup():
 @app.route('/home',methods=["GET","POST"])
 def home():
    listbm = []
+   recommendedGenre=request.cookies.get('genreCookie')
    if 'username' in session:
       conn = None
       try:
          bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
          conn = sqlite3.connect(bookstore)
-         dbURL = "SELECT * FROM books"
-         cursor = conn.cursor()
-         cursor.execute(dbURL)
+         if(recommendedGenre is None):
+            dbURL = "SELECT * FROM books where genre='Childrens' "
+            cursor = conn.cursor()
+            cursor.execute(dbURL)
+         else:
+            dbURL = "SELECT * FROM books where genre=?"
+            cursor = conn.cursor()
+            cursor.execute(dbURL,(recommendedGenre,))
          for row in cursor:
             listbm.append(row)
+         if(len(listbm)<3):
+            listbm.append(listbm[0])
+            listbm.append(listbm[0])
          random.shuffle(listbm)
-         listbm=listbm[0:3]
+         
       except Exception as e:
          print(e)
          print('hello')
@@ -177,7 +195,8 @@ def cart():
    conn = sqlite3.connect(bookstore)
    dbURL = "SELECT B.name,B.id,B.rating,B.price,B.image,B.details,B.genre,C.quantity from books as B,cart as C where C.id in (Select id from cart where username=?) and B.id==C.id"
    cursor = conn.cursor()
-   cursor.execute(dbURL, (session['username'],))
+   if 'username' in session:
+      cursor.execute(dbURL, (session['username'],))
    for row in cursor:
       cartlist.append(row)
       price+=row[7]*row[3]
@@ -203,7 +222,9 @@ def catalouge():
          cursor.execute(dbURL,(genre,))
       for row in cursor:
          booklist.append(row)
-      return render_template('catalouge.html', booklist=booklist, genrelist=genrelist)
+      resp = make_response(render_template('catalouge.html', booklist=booklist, genrelist=genrelist))
+      resp.set_cookie('genreCookie',genre)
+      return resp
    elif request.method=="GET":
       if('genre' in session):
          if(session['genre'] == 'All'):
@@ -231,7 +252,8 @@ def favourites():
    conn = sqlite3.connect(bookstore)
    dbURL = "SELECT * from books where id in (Select id from fav where username=?)"
    cursor = conn.cursor()
-   cursor.execute(dbURL,(session['username'],))
+   if 'username' in session:
+      cursor.execute(dbURL,(session['username'],))
    for row in cursor:
       print(row)
       favlist.append(row)
@@ -250,7 +272,17 @@ def getbook(bookno):
    for row in cursor:
       bookdata=row
       break
-   return render_template('book.html', bookdata=bookdata, genrelist=genrelist)
+   desc=getProductDescription(bookdata[5])[:-7]
+   return render_template('book.html', bookdata=bookdata,desc=desc ,genrelist=genrelist)
+
+
+def getProductDescription(link):
+   page = requests.get(link)
+   soup = BeautifulSoup(page.content, 'html.parser')
+   article = soup.find('div', id='content_inner').find('article', class_="product_page")
+   paras=article.findAll('p')
+   desc=(paras[3].string)
+   return desc
 
 def getBookDetails(booknum):
    bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
@@ -279,6 +311,40 @@ def addtocart(bookno):
       return redirect(url_for('catalouge'))
    flash("Added to Cart")
    return redirect(url_for('catalouge'))
+
+
+@app.route('/addtocartfromfav/<int:bookno>', methods=["GET", "POST"])
+def addtocartfromfav(bookno):
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   try:
+      dbURL = "insert into cart values(?,?,1)"
+      cursor = conn.cursor()
+      cursor.execute(dbURL, (session['username'], int(bookno),))
+      conn.commit()
+   except Exception as e:
+      print(e)
+      flash('Already in cart')
+      return redirect(url_for('favourites'))
+   flash("Added to Cart")
+   return redirect(url_for('favourites'))
+
+
+@app.route('/addtocartfromview/<int:bookno>', methods=["GET", "POST"])
+def addtocartfromview(bookno):
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   try:
+      dbURL = "insert into cart values(?,?,1)"
+      cursor = conn.cursor()
+      cursor.execute(dbURL, (session['username'], int(bookno),))
+      conn.commit()
+   except Exception as e:
+      print(e)
+      flash('Already in cart')
+      return redirect(url_for('getbook', bookno=bookno))
+   flash("Added to Cart")
+   return redirect(url_for('getbook', bookno=bookno))
 
 
 @app.route('/updatecart/<int:bookno>', methods=["POST"])
@@ -336,6 +402,23 @@ def addtofav(bookno):
    return redirect(url_for('catalouge'))
 
 
+@app.route('/addtofavfromview/<int:bookno>', methods=["GET", "POST"])
+def addtofavfromview(bookno):
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   try:
+      dbURL = "insert into fav values(?,?)"
+      cursor = conn.cursor()
+      cursor.execute(dbURL, (session['username'], int(bookno),))
+      conn.commit()
+   except Exception as e:
+      print(e)
+      flash('Already in favourites')
+      return redirect(url_for('getbook',bookno=bookno))
+   flash("Added to Favourites")
+   return redirect(url_for('getbook', bookno=bookno))
+
+
 @app.route('/removefromfav/<int:bookno>', methods=["GET", "POST"])
 def removefromfav(bookno):
    bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
@@ -354,12 +437,102 @@ def removefromfav(bookno):
 
 @app.route('/orders')
 def orders():
-   return render_template('orders.html', genrelist=genrelist)
+   orderlist = []
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   dbURL = "SELECT * from orders where username=?"
+   cursor = conn.cursor()
+   if 'username' in session:
+      cursor.execute(dbURL, (session['username'],))
+   for row in cursor:
+      address=row[2]+', '+row[3]+', '+row[4]+', '+str(row[5])
+      dat=row[8]
+      orderid=row[1]
+      amountpaid=row[7]
+      paymentMethod=row[6]
+      orderlist.append((orderid,address,dat,amountpaid,paymentMethod))
+   return render_template('orders.html', genrelist=genrelist, orderlist=orderlist)
 
+
+@app.route('/cancel/<string:orderid>')
+def cancel(orderid):
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   try:
+      dbURL = "delete from orders where orderid=?"
+      cursor = conn.cursor()
+      cursor.execute(dbURL, (orderid,))
+      conn.commit()
+   except Exception as e:
+      flash("Error")
+   flash("Order Cancelled")
+   return redirect(url_for('orders'))
 
 @app.route('/checkout')
 def checkout():
-   return render_template('checkout.html',genrelist=genrelist)
+   price = 0
+   quantity=0
+   bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+   conn = sqlite3.connect(bookstore)
+   dbURL = "SELECT B.name,B.id,B.rating,B.price,B.image,B.details,B.genre,C.quantity from books as B,cart as C where C.id in (Select id from cart where username=?) and B.id==C.id"
+   cursor = conn.cursor()
+   if 'username' in session:
+      cursor.execute(dbURL, (session['username'],))
+   for row in cursor:
+      quantity+=row[7]
+      price += row[7]*row[3]
+   print(price)
+   if price==0 or quantity==0:
+      flash("Cant checkout with ZERO items in cart")
+      return redirect(url_for('cart'))
+   return render_template('checkout.html', quantity=quantity, genrelist=genrelist, price=price)
+
+
+@app.route('/processCheckout', methods=['POST'])
+def processCheckout():
+   address = request.form['address']
+   total = request.form['total']
+   paymentMethod= request.form['paymentMethod']
+   country = request.form['country']
+   state = request.form['state']
+   pincode = request.form['zip']
+   quantity = request.form['quantity']
+   if(pincode=='' or country=='' or state=='' or total==0 or address==''):
+      flash("All fields are mandatory")
+      return redirect(url_for('checkout',total=total,quantity=quantity))
+   elif not isValidZip(pincode):
+      flash("Invalid Zip")
+      return redirect(url_for('checkout', total=total, quantity=quantity))
+   else:
+      username=session['username']
+      datop = datetime.datetime.now()
+      orderid= session['username']+str(int(datetime.datetime.timestamp(datop)*(10**6)))
+      print(orderid) 
+      bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+      conn = sqlite3.connect(bookstore)
+      try:   
+         dbURL = "insert into orders values(?,?,?,?,?,?,?,?,?)"
+         cursor = conn.cursor()
+         cursor.execute(dbURL, (username,orderid,address,country,state,pincode,paymentMethod,total,datop))
+         conn.commit()
+      except Exception as e:
+         print(e)
+         flash("Some error occured while placing order. Check your connection or try again")
+         return redirect(url_for('checkout',quantity=quantity,total=total))
+      deleteCart(username)
+      flash("Order placed successfully")
+      return redirect(url_for('orders'))   
+
+def deleteCart(username):
+   try:
+      bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
+      conn = sqlite3.connect(bookstore)
+      dbURL2 = "delete from cart where username=?"
+      cursor2 = conn.cursor()
+      cursor2.execute(dbURL2, (username,))
+      conn.commit()
+   except Exception as e:
+      print(e)
 
 @app.route('/logout')
 def logout():
