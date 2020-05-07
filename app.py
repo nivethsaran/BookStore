@@ -130,7 +130,7 @@ def signup():
       elif not re.search(regex,email):
             flash('Enter Valid email')
       elif validPassword(password)=='invalid':
-         flash('Weak Password')
+         flash('Weak Password A strong paassword should contain min. 8 characters, a special char, a digit, a uppercase and a lowercase letter')
       elif not isValidNumber(mobile):
          flash('Invalid Mobile Number')
       else:
@@ -200,7 +200,7 @@ def cart():
    for row in cursor:
       cartlist.append(row)
       price+=row[7]*row[3]
-   print(price)
+   price=round(price,2)
    return render_template('cart.html', cartlist=cartlist, genrelist=genrelist,price=price)
 
 @app.route('/catalouge', methods=["GET", "POST"])
@@ -349,11 +349,13 @@ def addtocartfromview(bookno):
 
 @app.route('/updatecart/<int:bookno>', methods=["POST"])
 def updateCart(bookno):
-   print("Cehck")
    bookstore = os.path.join(ROOT_FOLDER, 'bookstore.db')
    conn = sqlite3.connect(bookstore)
    if(request.method=="POST"):
       quantity=request.form['quantity']
+      if(int(quantity)<1):
+         flash('Quantity must be atleast 1')
+         return redirect(url_for('cart'))
       try:
          dbURL = "update cart set quantity=? where username=? and id=?"
          cursor = conn.cursor()
@@ -361,9 +363,9 @@ def updateCart(bookno):
          conn.commit()
       except Exception as e:
          print(e)
-         flash('Already in cart')
+         flash('Some error occured, please try again')
          return redirect(url_for('cart'))
-   flash("Added to Cart")
+   flash("Quantity Updated")
    return redirect(url_for('cart'))
 
 
@@ -378,8 +380,7 @@ def removefromcart(bookno):
       cursor.execute(dbURL, (session['username'], int(bookno),))
       conn.commit()
    except Exception as e:
-      print(e)
-      flash(str(e))
+      flash('Some error occured, please try again')
       return redirect(url_for('cart'))
    flash("Removed from Cart")
    return redirect(url_for('cart'))
@@ -395,7 +396,6 @@ def addtofav(bookno):
       cursor.execute(dbURL, (session['username'],int(bookno),))
       conn.commit()
    except Exception as e:
-      print(e)
       flash('Already in favourites')
       return redirect(url_for('catalouge'))
    flash("Added to Favourites")
@@ -429,7 +429,6 @@ def removefromfav(bookno):
       cursor.execute(dbURL, (session['username'], int(bookno),))
       conn.commit()
    except Exception as e:
-      print(e)
       flash('Error')
       return redirect(url_for('favourites'))
    flash("Removed from Favourites")
@@ -481,7 +480,7 @@ def checkout():
    for row in cursor:
       quantity+=row[7]
       price += row[7]*row[3]
-   print(price)
+   price=round(price,2)
    if price==0 or quantity==0:
       flash("Cant checkout with ZERO items in cart")
       return redirect(url_for('cart'))
